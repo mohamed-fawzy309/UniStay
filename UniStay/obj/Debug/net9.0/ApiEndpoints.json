@@ -1,0 +1,44 @@
+[
+  {
+    "ContainingType": "LocationController",
+    "Method": "GetCenters",
+    "RelativePath": "api/Location/centers/{governorateId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "governorateId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LocationController",
+    "Method": "GetCities",
+    "RelativePath": "api/Location/cities/{centerId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "centerId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LocationController",
+    "Method": "GetGovernorates",
+    "RelativePath": "api/Location/governorates",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]

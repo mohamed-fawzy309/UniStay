@@ -1,0 +1,835 @@
+﻿@model UniStay.Models.Student
+@{
+    ViewData["Title"] = "لوحة الطالب";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;900&display=swap');
+
+    :root {
+        --midnight: #0a0e1a;
+        --deep-blue: #0d1528;
+        --navy: #111e3a;
+        --card-bg: #141f38;
+        --card-border: #1e2f52;
+        --gold: #f5c842;
+        --gold-light: #ffd96a;
+        --gold-glow: rgba(245, 200, 66, 0.15);
+        --teal: #00d4aa;
+        --teal-glow: rgba(0, 212, 170, 0.12);
+        --rose: #ff6b8a;
+        --rose-glow: rgba(255, 107, 138, 0.12);
+        --purple: #9b72ff;
+        --purple-glow: rgba(155, 114, 255, 0.12);
+        --sky: #38bdf8;
+        --text-primary: #e8edf8;
+        --text-secondary: #8da3c5;
+        --text-muted: #4d6a9a;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--midnight);
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+        color: var(--text-primary);
+        min-height: 100vh;
+    }
+
+    /* ─── Animated Background ─── */
+    .dash-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+        .dash-bg::before {
+            content: '';
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(245,200,66,0.06) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            animation: pulse-slow 8s ease-in-out infinite alternate;
+        }
+
+        .dash-bg::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0,212,170,0.06) 0%, transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            animation: pulse-slow 10s ease-in-out infinite alternate-reverse;
+        }
+
+    .grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 50px 50px;
+    }
+
+    @@keyframes pulse-slow {
+        from
+
+    {
+        transform: scale(1) translateY(0);
+        opacity: 0.7;
+    }
+
+    to {
+        transform: scale(1.3) translateY(-30px);
+        opacity: 1;
+    }
+
+    }
+
+    /* ─── Layout ─── */
+    .dash-wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ─── Header ─── */
+    .dash-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--card-border);
+        animation: fadeDown 0.6s ease both;
+    }
+
+    .dash-header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .avatar {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--gold), #e8a020);
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--midnight);
+        box-shadow: 0 0 20px var(--gold-glow);
+        flex-shrink: 0;
+    }
+
+    .dash-title {
+        font-family: 'Tajawal', sans-serif;
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .dash-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .header-badge {
+        background: linear-gradient(135deg, var(--gold-glow), transparent);
+        border: 1px solid rgba(245,200,66,0.3);
+        color: var(--gold);
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+    }
+
+    /* ─── Alerts ─── */
+    .uni-alert {
+        padding: 0.9rem 1.25rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1px solid;
+        animation: fadeDown 0.5s ease both;
+    }
+
+    .uni-alert-success {
+        background: rgba(0,212,170,0.1);
+        border-color: rgba(0,212,170,0.3);
+        color: var(--teal);
+    }
+
+    .uni-alert-error {
+        background: rgba(255,107,138,0.1);
+        border-color: rgba(255,107,138,0.3);
+        color: var(--rose);
+    }
+
+    /* ─── Stats Row ─── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 1.2rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        animation: fadeUp 0.6s ease both;
+        transition: transform 0.25s, box-shadow 0.25s;
+        cursor: default;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+        .stat-icon.gold {
+            background: var(--gold-glow);
+            border: 1px solid rgba(245,200,66,0.2);
+        }
+
+        .stat-icon.teal {
+            background: var(--teal-glow);
+            border: 1px solid rgba(0,212,170,0.2);
+        }
+
+        .stat-icon.rose {
+            background: var(--rose-glow);
+            border: 1px solid rgba(255,107,138,0.2);
+        }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.1rem;
+    }
+
+    .stat-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    /* ─── Main Cards Grid ─── */
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .uni-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        overflow: hidden;
+        animation: fadeUp 0.7s ease both;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+        .uni-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+        }
+
+    .uni-card-header {
+        padding: 1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+        .uni-card-header.blue {
+            background: linear-gradient(135deg, rgba(56,189,248,0.12), transparent);
+            color: var(--sky);
+        }
+
+        .uni-card-header.gold {
+            background: linear-gradient(135deg, rgba(245,200,66,0.12), transparent);
+            color: var(--gold);
+        }
+
+        .uni-card-header.teal {
+            background: linear-gradient(135deg, rgba(0,212,170,0.12), transparent);
+            color: var(--teal);
+        }
+
+        .uni-card-header.rose {
+            background: linear-gradient(135deg, rgba(255,107,138,0.12), transparent);
+            color: var(--rose);
+        }
+
+    .header-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: blink 2s infinite;
+    }
+
+    .dot-blue {
+        background: var(--sky);
+    }
+
+    .dot-gold {
+        background: var(--gold);
+    }
+
+    .dot-teal {
+        background: var(--teal);
+    }
+
+    .dot-rose {
+        background: var(--rose);
+    }
+
+    .uni-card-body {
+        padding: 1.4rem;
+    }
+
+    /* ─── Info Rows ─── */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 0.875rem;
+    }
+
+        .info-row:last-of-type {
+            border-bottom: none;
+        }
+
+    .info-label {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    /* ─── Badges ─── */
+    .uni-badge {
+        display: inline-block;
+        padding: 0.3rem 0.9rem;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin-top: 0.75rem;
+    }
+
+    .badge-success {
+        background: rgba(0,212,170,0.15);
+        color: var(--teal);
+        border: 1px solid rgba(0,212,170,0.3);
+    }
+
+    .badge-warning {
+        background: rgba(245,200,66,0.15);
+        color: var(--gold);
+        border: 1px solid rgba(245,200,66,0.3);
+    }
+
+    .badge-danger {
+        background: rgba(255,107,138,0.15);
+        color: var(--rose);
+        border: 1px solid rgba(255,107,138,0.3);
+    }
+
+    .badge-info {
+        background: rgba(56,189,248,0.15);
+        color: var(--sky);
+        border: 1px solid rgba(56,189,248,0.3);
+    }
+
+    /* ─── Empty state ─── */
+    .empty-state {
+        text-align: center;
+        padding: 1.5rem 0;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .empty-icon {
+        font-size: 2rem;
+        margin-bottom: 0.4rem;
+        opacity: 0.5;
+    }
+
+    /* ─── Buttons ─── */
+    .uni-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1.1rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        font-family: 'Cairo', sans-serif;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 0.75rem;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold), #e8a020);
+        color: var(--midnight);
+    }
+
+        .btn-gold:hover {
+            box-shadow: 0 0 18px var(--gold-glow);
+            transform: translateY(-1px);
+            color: var(--midnight);
+        }
+
+    .btn-teal {
+        background: linear-gradient(135deg, var(--teal), #00b090);
+        color: var(--midnight);
+    }
+
+        .btn-teal:hover {
+            box-shadow: 0 0 18px var(--teal-glow);
+            transform: translateY(-1px);
+            color: var(--midnight);
+        }
+
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--text-secondary);
+    }
+
+        .btn-ghost:hover {
+            background: var(--card-border);
+            color: var(--text-primary);
+        }
+
+    /* ─── Quick Links ─── */
+    .quick-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 1.4rem;
+        animation: fadeUp 0.8s ease both;
+    }
+
+    .quick-title {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 1rem;
+    }
+
+    .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.75rem;
+    }
+
+    .quick-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        padding: 1rem 0.5rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--card-border);
+        transition: all 0.22s;
+        color: var(--text-secondary);
+    }
+
+        .quick-link:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.12);
+            transform: translateY(-3px);
+            color: var(--text-primary);
+        }
+
+            .quick-link:hover .ql-icon {
+                transform: scale(1.15);
+            }
+
+    .ql-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.2rem;
+        transition: transform 0.22s;
+    }
+
+    .ql-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .ql-i1 .ql-icon {
+        background: rgba(56,189,248,0.12);
+        border: 1px solid rgba(56,189,248,0.2);
+    }
+
+    .ql-i2 .ql-icon {
+        background: rgba(0,212,170,0.12);
+        border: 1px solid rgba(0,212,170,0.2);
+    }
+
+    .ql-i3 .ql-icon {
+        background: rgba(245,200,66,0.12);
+        border: 1px solid rgba(245,200,66,0.2);
+    }
+
+    .ql-i4 .ql-icon {
+        background: rgba(155,114,255,0.12);
+        border: 1px solid rgba(155,114,255,0.2);
+    }
+
+    .ql-i5 .ql-icon {
+        background: rgba(255,107,138,0.12);
+        border: 1px solid rgba(255,107,138,0.2);
+    }
+
+    .ql-i6 .ql-icon {
+        background: rgba(150,150,150,0.1);
+        border: 1px solid rgba(150,150,150,0.2);
+    }
+
+    /* ─── Animations ─── */
+    @@keyframes fadeDown {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+    @@keyframes fadeUp {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+    @@keyframes blink {
+        0%, 100%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    }
+
+    .stat-card:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .stat-card:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .stat-card:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .main-grid .uni-card:nth-child(1) {
+        animation-delay: 0.35s;
+    }
+
+    .main-grid .uni-card:nth-child(2) {
+        animation-delay: 0.45s;
+    }
+
+    .quick-card {
+        animation-delay: 0.55s;
+    }
+
+    /* ─── Responsive ─── */
+    @@media (max-width: 768px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .dash-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .quick-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<!-- Background -->
+<div class="dash-bg"><div class="grid-overlay"></div></div>
+
+<div class="dash-wrapper">
+
+    <!-- ─── Header ─── -->
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div class="avatar">@(Model?.FullNameArabic?.Substring(0, 1) ?? "؟")</div>
+            <div>
+                <p class="dash-title">أهلاً، @Model?.FullNameArabic 👋</p>
+                <p class="dash-subtitle">لوحة التحكم الخاصة بك — UniStay</p>
+            </div>
+        </div>
+        <div class="header-badge">🎓 طالب نشط</div>
+    </div>
+
+    <!-- ─── Alerts ─── -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="uni-alert uni-alert-success">✅ @TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="uni-alert uni-alert-error">⚠️ @TempData["Error"]</div>
+    }
+
+    <!-- ─── Stats Row ─── -->
+    @{
+        var allocation = Model?.Allocation;
+        var app = Model?.Applications?.FirstOrDefault();
+    }
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon gold">🏠</div>
+            <div>
+                <div class="stat-label">حالة السكن</div>
+                <div class="stat-value">@(allocation != null ? "مقيم حالياً" : "غير مقيم")</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon teal">📋</div>
+            <div>
+                <div class="stat-label">حالة الطلب</div>
+                <div class="stat-value">@(app != null ? app.Status : "لا يوجد")</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon rose">📅</div>
+            <div>
+                <div class="stat-label">السنة الدراسية</div>
+                <div class="stat-value">@(app?.AcademicYear ?? "—")</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Main Cards ─── -->
+    <div class="main-grid">
+
+        <!-- Housing Card -->
+        <div class="uni-card">
+            <div class="uni-card-header gold">
+                <span class="header-dot dot-gold"></span>
+                🏠 حالة السكن
+            </div>
+            <div class="uni-card-body">
+                @if (allocation != null)
+                {
+                    <div class="info-row">
+                        <span class="info-label">المبنى</span>
+                        <span class="info-value">@allocation.Room?.Building?.BuildingName</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">رقم الغرفة</span>
+                        <span class="info-value">@allocation.Room?.RoomNumber</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">رقم السرير</span>
+                        <span class="info-value">@allocation.BedNumber</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">تاريخ البدء</span>
+                        <span class="info-value">@allocation.FromDate</span>
+                    </div>
+                    <span class="uni-badge badge-success">✅ مقيم حالياً</span>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">🏠</div>
+                        <p>لا يوجد سكن مُعيَّن حالياً</p>
+                    </div>
+                    <a asp-controller="Student" asp-action="Apply" class="uni-btn btn-gold">+ تقديم طلب سكن</a>
+                }
+            </div>
+        </div>
+
+        <!-- Application Card -->
+        <div class="uni-card">
+            <div class="uni-card-header teal">
+                <span class="header-dot dot-teal"></span>
+                📋 حالة الطلب
+            </div>
+            <div class="uni-card-body">
+                @if (app != null)
+                {
+                    <div class="info-row">
+                        <span class="info-label">السنة الأكاديمية</span>
+                        <span class="info-value">@app.AcademicYear</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">تفضيل السكن</span>
+                        <span class="info-value">@app.HousingPreference</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">الحالة</span>
+                        <span class="info-value">
+                            <span class="uni-badge @(app.Status == "Accepted" ? "badge-success" : app.Status == "Rejected" ? "badge-danger" : "badge-warning")" style="margin:0">
+                                @(app.Status == "Accepted" ? "✅ مقبول" : app.Status == "Rejected" ? "❌ مرفوض" : "⏳ قيد المراجعة")
+                            </span>
+                        </span>
+                    </div>
+                    <a asp-action="MyApplication" class="uni-btn btn-teal">عرض تفاصيل الطلب</a>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <p>لم تقدم أي طلب بعد</p>
+                    </div>
+                    <a asp-action="Apply" class="uni-btn btn-teal">تقديم طلب الآن</a>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ─── Quick Links ─── -->
+    <div class="quick-card">
+        <div class="quick-title">⚡ الوصول السريع</div>
+        <div class="quick-grid">
+            <a asp-action="Profile" class="quick-link ql-i1">
+                <div class="ql-icon">👤</div>
+                <span class="ql-label">بياناتي</span>
+            </a>
+            <a  asp-controller="Student" asp-action="Apply" class="quick-link ql-i2">
+                <div class="ql-icon">🏠</div>
+                <span class="ql-label">تقديم طلب</span>
+            </a>
+            <a asp-action="Payment" class="quick-link ql-i3">
+                <div class="ql-icon">💳</div>
+                <span class="ql-label">الرسوم</span>
+            </a>
+            <a asp-action="Meals" class="quick-link ql-i4">
+                <div class="ql-icon">🍽</div>
+                <span class="ql-label">الوجبات</span>
+            </a>
+            <a asp-action="Absences" class="quick-link ql-i5">
+                <div class="ql-icon">📅</div>
+                <span class="ql-label">الغياب</span>
+            </a>
+            <form asp-action="Logout" asp-controller="Auth" method="post" style="display:inline;">
+                <button type="submit" class="quick-link ql-i6 w-100 border-1 bg-transparent p-3">
+                    <div class="ql-icon">🚪</div>
+                    <span class="ql-label">خروج</span>
+                </button>
+            </form>
+ 
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Staggered card entrance on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.uni-card, .stat-card, .quick-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.style.opacity = '1';
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        cards.forEach(c => { c.style.opacity = '0'; observer.observe(c); });
+
+        // Auto-dismiss alerts
+        document.querySelectorAll('.uni-alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.5s, transform 0.5s';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-8px)';
+                setTimeout(() => alert.remove(), 500);
+            }, 4500);
+        });
+    });
+</script>

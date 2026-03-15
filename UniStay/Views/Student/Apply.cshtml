@@ -1,0 +1,506 @@
+﻿@model UniStay.ViewModels.ApplyViewModel
+@{
+    ViewData["Title"] = "طلب سكن";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;900&display=swap');
+
+    :root {
+        --midnight:   #0a0e1a;
+        --card-bg:    #141f38;
+        --card-border:#1e2f52;
+        --gold:       #f5c842;
+        --gold-glow:  rgba(245,200,66,0.15);
+        --teal:       #00d4aa;
+        --teal-glow:  rgba(0,212,170,0.12);
+        --rose:       #ff6b8a;
+        --sky:        #38bdf8;
+        --purple:     #9b72ff;
+        --text-primary:  #e8edf8;
+        --text-secondary:#8da3c5;
+        --text-muted:    #4d6a9a;
+    }
+
+    body {
+        background: var(--midnight);
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+        color: var(--text-primary);
+        min-height: 100vh;
+    }
+
+    /* Background */
+    .dash-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .dash-bg::before {
+        content:''; position:absolute;
+        width:700px; height:700px;
+        background: radial-gradient(circle, rgba(245,200,66,0.06) 0%, transparent 70%);
+        top:-200px; right:-200px;
+        animation: pulse-slow 8s ease-in-out infinite alternate;
+    }
+    .dash-bg::after {
+        content:''; position:absolute;
+        width:600px; height:600px;
+        background: radial-gradient(circle, rgba(0,212,170,0.06) 0%, transparent 70%);
+        bottom:-100px; left:-100px;
+        animation: pulse-slow 10s ease-in-out infinite alternate-reverse;
+    }
+    .grid-overlay {
+        position:absolute; inset:0;
+        background-image:
+            linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+        background-size:50px 50px;
+    }
+    @@keyframes pulse-slow {
+        from { transform:scale(1) translateY(0); opacity:.7; }
+        to   { transform:scale(1.3) translateY(-30px); opacity:1; }
+    }
+
+    /* Layout */
+    .apply-wrapper {
+        position:relative; z-index:1;
+        max-width:780px; margin:0 auto;
+        padding:2rem 1.5rem 4rem;
+    }
+
+    /* Page header */
+    .page-header {
+        display:flex; align-items:center; gap:1rem;
+        margin-bottom:2rem;
+        animation: fadeDown .6s ease both;
+    }
+    .page-icon {
+        width:52px; height:52px; border-radius:14px;
+        background:linear-gradient(135deg,var(--gold),#e8a020);
+        display:grid; place-items:center;
+        font-size:1.4rem; color:var(--midnight);
+        box-shadow:0 0 20px var(--gold-glow);
+    }
+    .page-title { font-family:'Tajawal',sans-serif; font-size:1.5rem; font-weight:700; margin:0; }
+    .page-sub   { font-size:.82rem; color:var(--text-muted); margin:0; }
+
+    /* Alerts */
+    .uni-alert { padding:.9rem 1.25rem; border-radius:12px; margin-bottom:1.25rem;
+        font-size:.9rem; font-weight:500; border:1px solid;
+        animation:fadeDown .5s ease both; }
+    .uni-alert-danger { background:rgba(255,107,138,.1); border-color:rgba(255,107,138,.3); color:var(--rose); }
+
+    /* Step indicator */
+    .steps { display:flex; align-items:center; gap:0; margin-bottom:2rem; animation:fadeDown .65s ease both; }
+    .step {
+        display:flex; flex-direction:column; align-items:center; gap:.35rem;
+        flex:1; position:relative;
+    }
+    .step::after {
+        content:''; position:absolute;
+        top:18px; left:-50%; width:100%; height:2px;
+        background:var(--card-border);
+        z-index:0;
+    }
+    .step:first-child::after { display:none; }
+    .step-circle {
+        width:36px; height:36px; border-radius:50%;
+        display:grid; place-items:center;
+        font-size:.8rem; font-weight:700;
+        background:var(--card-bg); border:2px solid var(--card-border);
+        color:var(--text-muted); z-index:1;
+        transition:all .3s;
+    }
+    .step.active .step-circle  { background:var(--gold); border-color:var(--gold); color:var(--midnight); box-shadow:0 0 14px var(--gold-glow); }
+    .step.done .step-circle    { background:var(--teal); border-color:var(--teal); color:var(--midnight); }
+    .step.active::after, .step.done::after { background:linear-gradient(90deg,var(--teal),var(--card-border)); }
+    .step-label { font-size:.72rem; color:var(--text-muted); font-weight:600; }
+    .step.active .step-label   { color:var(--gold); }
+    .step.done .step-label     { color:var(--teal); }
+
+    /* Card */
+    .uni-card {
+        background:var(--card-bg); border:1px solid var(--card-border);
+        border-radius:20px; overflow:hidden;
+        margin-bottom:1.25rem;
+        animation:fadeUp .7s ease both;
+    }
+    .uni-card-header {
+        padding:1rem 1.4rem; display:flex; align-items:center; gap:.65rem;
+        font-weight:700; font-size:.9rem; border-bottom:1px solid var(--card-border);
+    }
+    .h-gold { background:linear-gradient(135deg,rgba(245,200,66,.12),transparent); color:var(--gold); }
+    .h-teal { background:linear-gradient(135deg,rgba(0,212,170,.12),transparent); color:var(--teal); }
+    .h-sky  { background:linear-gradient(135deg,rgba(56,189,248,.12),transparent); color:var(--sky); }
+    .uni-card-body { padding:1.5rem; }
+
+    /* Form controls */
+    .form-label {
+        display:block; font-size:.82rem; font-weight:600;
+        color:var(--text-secondary); margin-bottom:.45rem;
+    }
+    .form-control, .form-select {
+        width:100%; padding:.7rem 1rem;
+        background:rgba(255,255,255,.04);
+        border:1px solid var(--card-border);
+        border-radius:12px;
+        color:var(--text-primary);
+        font-family:'Cairo',sans-serif;
+        font-size:.9rem;
+        transition:border-color .2s, box-shadow .2s;
+        outline:none;
+        appearance:none;
+        -webkit-appearance:none;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color:var(--gold);
+        box-shadow:0 0 0 3px var(--gold-glow);
+    }
+    .form-control::placeholder { color:var(--text-muted); }
+    .form-select option { background:#141f38; color:var(--text-primary); }
+    .select-wrapper { position:relative; }
+    .select-wrapper::after {
+        content:'▾'; position:absolute;
+        left:1rem; top:50%; transform:translateY(-50%);
+        color:var(--text-muted); pointer-events:none; font-size:1rem;
+    }
+
+    .field-group { margin-bottom:1.2rem; }
+    .field-row   { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+    /* Loading spinner for rooms */
+    .rooms-loading {
+        display:none; text-align:center;
+        padding:2rem; color:var(--text-muted);
+    }
+    .spinner {
+        width:32px; height:32px; border:3px solid var(--card-border);
+        border-top-color:var(--gold); border-radius:50%;
+        animation:spin .7s linear infinite; margin:0 auto .75rem;
+    }
+    @@keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Room cards grid */
+    .rooms-grid {
+        display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+        gap:.85rem; margin-top:.75rem;
+    }
+    .room-card {
+        background:rgba(255,255,255,.03);
+        border:2px solid var(--card-border);
+        border-radius:14px; padding:1rem;
+        cursor:pointer; transition:all .22s;
+        position:relative;
+    }
+    .room-card:hover           { border-color:rgba(245,200,66,.4); background:rgba(245,200,66,.04); }
+    .room-card.selected        { border-color:var(--gold); background:var(--gold-glow); }
+    .room-card.selected::after {
+        content:'✓'; position:absolute; top:8px; left:8px;
+        width:22px; height:22px; border-radius:50%;
+        background:var(--gold); color:var(--midnight);
+        font-size:.7rem; font-weight:900;
+        display:grid; place-items:center;
+    }
+    .room-card.full { opacity:.45; cursor:not-allowed; pointer-events:none; }
+    .room-number { font-size:1.1rem; font-weight:800; color:var(--text-primary); margin-bottom:.3rem; }
+    .room-type   { font-size:.75rem; color:var(--text-muted); margin-bottom:.6rem; }
+    .room-beds   { display:flex; align-items:center; gap:.4rem; margin-bottom:.5rem; }
+    .bed-dot {
+        width:10px; height:10px; border-radius:3px;
+        background:var(--teal); opacity:.9;
+    }
+    .bed-dot.taken { background:var(--rose); opacity:.5; }
+    .room-features { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.5rem; }
+    .feat-tag {
+        font-size:.65rem; padding:.15rem .5rem;
+        border-radius:6px; font-weight:600;
+        background:rgba(56,189,248,.1);
+        border:1px solid rgba(56,189,248,.2);
+        color:var(--sky);
+    }
+    .rooms-empty {
+        text-align:center; padding:2.5rem;
+        color:var(--text-muted); font-size:.875rem;
+    }
+    .rooms-empty .empty-icon { font-size:2rem; opacity:.4; margin-bottom:.5rem; }
+
+    /* Timer notice */
+    .timer-notice {
+        background:rgba(245,200,66,.07);
+        border:1px solid rgba(245,200,66,.25);
+        border-radius:14px; padding:1rem 1.25rem;
+        display:flex; align-items:flex-start; gap:.75rem;
+        margin-bottom:1.5rem; font-size:.85rem;
+    }
+    .timer-icon { font-size:1.4rem; flex-shrink:0; line-height:1; }
+    .timer-text strong { display:block; color:var(--gold); margin-bottom:.2rem; }
+    .timer-text { color:var(--text-secondary); line-height:1.6; }
+
+    /* Submit button */
+    .btn-submit {
+        width:100%; padding:.9rem;
+        background:linear-gradient(135deg,var(--gold),#e8a020);
+        border:none; border-radius:14px;
+        color:var(--midnight); font-family:'Cairo',sans-serif;
+        font-size:1rem; font-weight:800;
+        cursor:pointer; transition:all .2s;
+        box-shadow:0 4px 20px var(--gold-glow);
+    }
+    .btn-submit:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 30px var(--gold-glow); }
+    .btn-submit:disabled { opacity:.5; cursor:not-allowed; }
+
+    .btn-back {
+        display:inline-flex; align-items:center; gap:.4rem;
+        text-decoration:none; color:var(--text-muted);
+        font-size:.85rem; font-weight:600;
+        margin-bottom:1.5rem; transition:color .2s;
+    }
+    .btn-back:hover { color:var(--text-primary); }
+
+    /* Animations */
+    @@keyframes fadeDown {
+        from { opacity:0; transform:translateY(-16px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+    @@keyframes fadeUp {
+        from { opacity:0; transform:translateY(20px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+    @@keyframes slideIn {
+        from { opacity:0; transform:translateY(10px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .rooms-grid .room-card { animation:slideIn .25s ease both; }
+
+    @@media(max-width:600px) {
+        .field-row { grid-template-columns:1fr; }
+        .rooms-grid { grid-template-columns:1fr 1fr; }
+        .steps { gap:0; }
+    }
+</style>
+
+<div class="dash-bg"><div class="grid-overlay"></div></div>
+
+<div class="apply-wrapper">
+
+    <!-- Back link -->
+    <a asp-action="Dashboard" class="btn-back">← العودة إلى لوحة التحكم</a>
+
+    <!-- Page header -->
+    <div class="page-header">
+        <div class="page-icon">🏠</div>
+        <div>
+            <p class="page-title">طلب سكن جديد</p>
+            <p class="page-sub">اختر المبنى والغرفة المناسبة لك</p>
+        </div>
+    </div>
+
+    <!-- Validation errors -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="uni-alert uni-alert-danger">
+            ⚠️ يرجى تصحيح الأخطاء التالية:
+            <ul style="margin:.5rem 0 0; padding-right:1.2rem;">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <!-- Timer notice -->
+    <div class="timer-notice">
+        <div class="timer-icon">⏱</div>
+        <div class="timer-text">
+            <strong>تنبيه: مدة الحجز المؤقت 24 ساعة</strong>
+            بعد اختيار الغرفة، يُحجز لك السرير مؤقتاً لمدة 24 ساعة. إذا لم يتم الدفع خلال هذه المدة سيُلغى الحجز تلقائياً وتعود الغرفة للقائمة المتاحة.
+        </div>
+    </div>
+
+    <form asp-controller="Student" asp-action="Apply" method="post" id="applyForm">
+        @Html.AntiForgeryToken()
+
+        <!-- Step 1: Building -->
+        <div class="uni-card">
+            <div class="uni-card-header h-gold">🏢 اختيار المبنى</div>
+            <div class="uni-card-body">
+                <div class="field-row">
+                    <div class="field-group">
+                        <label class="form-label">المبنى *</label>
+                        <div class="select-wrapper">
+                            <select asp-for="BuildingId" id="buildingSelect" class="form-select">
+                                <option value="">— اختر المبنى —</option>
+                                @foreach (var b in (IEnumerable<UniStay.Models.Building>)ViewBag.Buildings)
+                                {
+                                    <option value="@b.BuildingId">@b.BuildingName</option>
+                                }
+                            </select>
+                        </div>
+                        <span asp-validation-for="BuildingId" style="color:var(--rose);font-size:.8rem;"></span>
+                    </div>
+                     <div class="field-group"> 
+                         <label class="form-label">السنة الدراسية *</label> 
+                         <input asp-for="AcademicYear" class="form-control" placeholder="مثال: 2025/2026" /> 
+                         <span asp-validation-for="AcademicYear" style="color:var(--rose);font-size:.8rem;"></span> 
+                     </div> 
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Room picker -->
+        <div class="uni-card" id="roomSection" style="display:none;">
+            <div class="uni-card-header h-teal">🛏 اختيار الغرفة</div>
+            <div class="uni-card-body">
+                <div class="rooms-loading" id="roomsLoading">
+                    <div class="spinner"></div>
+                    جاري تحميل الغرف المتاحة...
+                </div>
+                <div id="roomsContainer"></div>
+                <!-- Hidden field that holds selected RoomId -->
+                <input type="hidden" asp-for="RoomId" id="roomIdField" />
+                <span asp-validation-for="RoomId" style="color:var(--rose);font-size:.8rem;"></span>
+            </div>
+        </div>
+
+        <!-- Step 3: Preferences -->
+        <div class="uni-card" id="prefSection" style="display:none;">
+            <div class="uni-card-header h-sky">✏️ التفضيلات (اختياري)</div>
+            <div class="uni-card-body">
+                <div class="field-row">
+                    <div class="field-group">
+                        <label class="form-label">التفضيل البيئي</label>
+                        <div class="select-wrapper">
+                            <select asp-for="HousingPreference" class="form-select">
+                                <option value="">— بدون تفضيل —</option>
+                                <option value="هادئ">🤫 هادئ</option>
+                                <option value="اجتماعي">🤝 اجتماعي</option>
+                                <option value="لا يهم">😊 لا يهم</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label class="form-label">ملاحظات إضافية</label>
+                        <input asp-for="Notes" class="form-control" placeholder="أي طلبات خاصة..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div id="submitSection" style="display:none;">
+            <button type="submit" class="btn-submit" id="submitBtn">
+                🔒 تأكيد الحجز وإتمام الدفع
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    const buildingSelect = document.getElementById('buildingSelect');
+    const roomSection    = document.getElementById('roomSection');
+    const prefSection    = document.getElementById('prefSection');
+    const submitSection  = document.getElementById('submitSection');
+    const roomsLoading   = document.getElementById('roomsLoading');
+    const roomsContainer = document.getElementById('roomsContainer');
+    const roomIdField    = document.getElementById('roomIdField');
+
+    buildingSelect.addEventListener('change', async function () {
+        const buildingId = this.value;
+
+        if (!buildingId) {
+            roomSection.style.display = 'none';
+            prefSection.style.display = 'none';
+            submitSection.style.display = 'none';
+            return;
+        }
+
+        roomSection.style.display = 'block';
+        roomsLoading.style.display = 'block';
+        roomsContainer.innerHTML = '';
+        roomIdField.value = '';
+        prefSection.style.display = 'none';
+        submitSection.style.display = 'none';
+
+        try {
+            const res   = await fetch(`/Student/GetRooms?buildingId=${buildingId}`);
+            const rooms = await res.json();
+
+            roomsLoading.style.display = 'none';
+
+            if (!rooms.length) {
+                roomsContainer.innerHTML = `
+                    <div class="rooms-empty">
+                        <div class="empty-icon">🏚</div>
+                        <p>لا توجد غرف متاحة في هذا المبنى حالياً</p>
+                    </div>`;
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'rooms-grid';
+
+            rooms.forEach((room, i) => {
+
+                const card = document.createElement('div');
+                card.className = `room-card${room.freeBeds === 0 ? ' full' : ''}`;
+                card.style.animationDelay = `${i * 0.05}s`;
+                card.dataset.roomId = room.roomId;
+
+                // Bed dots
+                let bedDots = '';
+                for (let b = 1; b <= room.bedsCount; b++) {
+                    const taken = b > room.freeBeds;
+                    bedDots += `<div class="bed-dot${taken ? ' taken' : ''}" title="${taken ? 'محجوز' : 'متاح'}"></div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="room-number">غرفة ${room.roomNumber}</div>
+                    <div class="room-type">${room.roomType} · دور ${room.floor ?? '—'}</div>
+                    <div class="room-beds">${bedDots}</div>
+                    <small style="color:var(--text-muted);font-size:.72rem;">
+                        ${room.freeBeds} سرير متاح من ${room.bedsCount}
+                    </small>
+                `;
+
+                if (room.freeBeds > 0) {
+                    card.addEventListener('click', () => selectRoom(card, room.roomId));
+                }
+
+                grid.appendChild(card);
+            });
+
+            roomsContainer.appendChild(grid);
+
+        } catch (err) {
+            roomsLoading.style.display = 'none';
+            roomsContainer.innerHTML = `
+                <p style="color:var(--rose);text-align:center;">
+                    ❌ حدث خطأ أثناء تحميل الغرف
+                </p>`;
+        }
+    });
+
+    function selectRoom(card, roomId) {
+
+        document.querySelectorAll('.room-card').forEach(c =>
+            c.classList.remove('selected')
+        );
+
+        card.classList.add('selected');
+        roomIdField.value = roomId;
+
+        prefSection.style.display = 'block';
+        submitSection.style.display = 'block';
+
+        setTimeout(() => {
+            submitSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+
+    // Prevent double submit
+    document.getElementById('applyForm').addEventListener('submit', function () {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري الحجز...';
+    });
+</script>

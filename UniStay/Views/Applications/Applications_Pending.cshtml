@@ -1,0 +1,118 @@
+﻿@model List<UniStay.Models.Application>
+@{
+    ViewData["Title"] = "الطلبات المعلقة";
+    Layout = "_AdminLayout";
+}
+
+<div class="alert alert-warning d-flex align-items-center mb-3">
+    <i class="fas fa-hourglass-half me-2"></i>
+    يوجد <strong class="mx-1">@Model.Count</strong> طلب ينتظر المراجعة
+</div>
+
+@foreach (var app in Model)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:44px;height:44px;background:#e8f0fe;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem">
+                            @(app.Student?.Gender == "Female" ? "👩" : "👨")
+                        </div>
+                        <div>
+                            <div class="fw-bold">@app.Student?.FullNameArabic</div>
+                            <small class="text-muted">@app.Student?.Faculty — @app.Student?.Grade</small><br />
+                            <small class="text-muted">📱 @app.Student?.Mobile</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">السنة الدراسية: <strong>@app.AcademicYear</strong></small>
+                    <small class="text-muted d-block">المبنى المطلوب: <strong>@(app.PreferredBuilding?.BuildingName ?? "غير محدد")</strong></small>
+                    <small class="text-muted d-block">نوع الإسكان: <strong>@app.HousingPreference</strong></small>
+                    <small class="text-muted d-block">التاريخ: @app.ApplicationDate?.ToString("dd/MM/yyyy")</small>
+                </div>
+                <div class="col-md-3 text-end">
+                    <a href="/Applications/Details/@app.ApplicationId" class="btn btn-outline-secondary btn-sm mb-1">
+                        <i class="fas fa-eye"></i> تفاصيل
+                    </a>
+                    <button class="btn btn-success btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#approveModal-@app.ApplicationId">
+                        <i class="fas fa-check"></i> قبول
+                    </button>
+                    <button class="btn btn-danger btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#rejectModal-@app.ApplicationId">
+                        <i class="fas fa-times"></i> رفض
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal-@app.ApplicationId" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">✅ قبول الطلب</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="/Applications/Approve">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <p>قبول طلب: <strong>@app.Student?.FullNameArabic</strong></p>
+                        <input type="hidden" name="id" value="@app.ApplicationId" />
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">اختر الغرفة</label>
+                            <select name="roomId" class="form-select" required>
+                                <option value="">-- اختر الغرفة المتاحة --</option>
+                            </select>
+                            <small class="text-muted">سيتم تحميل الغرف المتاحة تلقائياً</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">رقم السرير</label>
+                            <input type="number" name="bedNumber" class="form-control" min="1" max="6" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success">تأكيد القبول</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal-@app.ApplicationId" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">❌ رفض الطلب</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="/Applications/Reject">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <p>رفض طلب: <strong>@app.Student?.FullNameArabic</strong></p>
+                        <input type="hidden" name="id" value="@app.ApplicationId" />
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">سبب الرفض <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="3" required placeholder="اكتب سبب الرفض..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-danger">تأكيد الرفض</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+        <p>لا توجد طلبات معلقة حالياً 🎉</p>
+    </div>
+}

@@ -1,0 +1,54 @@
+﻿<!-- _LocationDropdowns.cshtml -->
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">المحافظة <span class="text-danger">*</span></label>
+        <select id="governorateSelect" name="GovernorateId" class="form-select" required>
+            <option value="">-- اختر المحافظة --</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">المركز / القسم <span class="text-danger">*</span></label>
+        <select id="centerSelect" name="CenterId" class="form-select" disabled required>
+            <option value="">-- اختر المركز --</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">المنطقة / القرية <span class="text-danger">*</span></label>
+        <select id="citySelect" name="CityId" class="form-select" disabled required>
+            <option value="">-- اختر المنطقة --</option>
+        </select>
+    </div>
+</div>
+
+<script>
+    (async function () {
+        const govSel    = document.getElementById('governorateSelect');
+        const centerSel = document.getElementById('centerSelect');
+        const citySel   = document.getElementById('citySelect');
+
+        const govRes = await fetch('/api/location/governorates');
+        const govs   = await govRes.json();
+        govs.forEach(g => govSel.add(new Option(g.nameAr, g.id)));
+
+        govSel.addEventListener('change', async function () {
+            centerSel.innerHTML = '<option value="">-- اختر المركز --</option>';
+            citySel.innerHTML   = '<option value="">-- اختر المنطقة --</option>';
+            centerSel.disabled  = true;
+            citySel.disabled    = true;
+            if (!this.value) return;
+            const centers = await (await fetch(`/api/location/centers/${this.value}`)).json();
+            centers.forEach(c => centerSel.add(new Option(c.nameAr, c.id)));
+            centerSel.disabled = false;
+        });
+
+        centerSel.addEventListener('change', async function () {
+            citySel.innerHTML = '<option value="">-- اختر المنطقة --</option>';
+            citySel.disabled  = true;
+            if (!this.value) return;
+            const cities = await (await fetch(`/api/location/cities/${this.value}`)).json();
+            cities.forEach(c => citySel.add(new Option(c.nameAr, c.id)));
+            citySel.disabled = false;
+        });
+    })();
+</script>
+

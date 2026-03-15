@@ -1,0 +1,1693 @@
+﻿@model UniStay.ViewModels.PaymentsViewModel
+@{
+    ViewData["Title"] = "المدفوعات";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;900&family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+
+    :root {
+        --midnight: #0a0e1a;
+        --deep-blue: #0d1528;
+        --navy: #111e3a;
+        --card-bg: #141f38;
+        --card-border: #1e2f52;
+        --gold: #f5c842;
+        --gold-light: #ffd96a;
+        --gold-glow: rgba(245,200,66,.15);
+        --teal: #00d4aa;
+        --teal-glow: rgba(0,212,170,.12);
+        --rose: #ff6b8a;
+        --rose-glow: rgba(255,107,138,.12);
+        --purple: #9b72ff;
+        --purple-glow: rgba(155,114,255,.12);
+        --sky: #38bdf8;
+        --green: #22c55e;
+        --green-glow: rgba(34,197,94,.12);
+        --orange: #fb923c;
+        --orange-glow: rgba(251,146,60,.12);
+        --text-primary: #e8edf8;
+        --text-secondary: #8da3c5;
+        --text-muted: #4d6a9a;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: var(--midnight);
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+        color: var(--text-primary);
+        min-height: 100vh;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--midnight);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--gold);
+        border-radius: 3px;
+    }
+
+    /* ══════════════════════════════
+               ANIMATED BACKGROUND
+            ══════════════════════════════ */
+    .dash-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+        .dash-bg::before {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(245,200,66,.06) 0%, transparent 70%);
+            top: -300px;
+            right: -200px;
+            animation: blob 9s ease-in-out infinite alternate;
+        }
+
+        .dash-bg::after {
+            content: '';
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0,212,170,.06) 0%, transparent 70%);
+            bottom: -200px;
+            left: -150px;
+            animation: blob 12s ease-in-out infinite alternate-reverse;
+        }
+
+    .grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+    }
+
+    @@keyframes blob {
+        from {
+            transform: scale(1) translate(0,0);
+            opacity: .7;
+        }
+
+        to {
+            transform: scale(1.4) translate(-20px,-30px);
+            opacity: 1;
+        }
+    }
+
+    /* ══════════════════════════════
+               LAYOUT
+            ══════════════════════════════ */
+    .pay-wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 5rem;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: .85rem;
+        font-weight: 600;
+        margin-bottom: 1.75rem;
+        transition: color .2s;
+    }
+
+        .btn-back:hover {
+            color: var(--text-primary);
+        }
+
+    /* ══════════════════════════════
+               PAGE HEADER
+            ══════════════════════════════ */
+    .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        animation: fadeDown .5s ease both;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--teal), #009978);
+        display: grid;
+        place-items: center;
+        font-size: 1.5rem;
+        color: #fff;
+        box-shadow: 0 0 24px var(--teal-glow);
+        flex-shrink: 0;
+    }
+
+    .page-title {
+        font-family: 'Tajawal', sans-serif;
+        font-size: 1.55rem;
+        font-weight: 800;
+    }
+
+    .page-sub {
+        font-size: .82rem;
+        color: var(--text-muted);
+        margin-top: .15rem;
+    }
+
+    /* ── Stats chips (header right side) ── */
+    .header-stats {
+        display: flex;
+        gap: .65rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .stat-chip {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: .5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 88px;
+        transition: transform .2s;
+    }
+
+        .stat-chip:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-chip .chip-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .stat-chip .chip-lbl {
+            font-size: .68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-top: .1rem;
+        }
+
+    .cv-teal {
+        color: var(--teal);
+    }
+
+    .cv-gold {
+        color: var(--gold);
+    }
+
+    .cv-rose {
+        color: var(--rose);
+    }
+
+    .cv-orange {
+        color: var(--orange);
+    }
+
+    /* ══════════════════════════════
+               ALERTS
+            ══════════════════════════════ */
+    .uni-alert {
+        padding: .9rem 1.25rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+        font-size: .9rem;
+        font-weight: 500;
+        border: 1px solid;
+        animation: fadeDown .5s ease both;
+        display: flex;
+        align-items: flex-start;
+        gap: .65rem;
+    }
+
+    .uni-alert-success {
+        background: var(--green-glow);
+        border-color: rgba(34,197,94,.3);
+        color: var(--green);
+    }
+
+    .uni-alert-danger {
+        background: var(--rose-glow);
+        border-color: rgba(255,107,138,.3);
+        color: var(--rose);
+    }
+
+    .uni-alert-warning {
+        background: var(--orange-glow);
+        border-color: rgba(251,146,60,.3);
+        color: var(--orange);
+    }
+
+    /* ══════════════════════════════
+               OVERDUE BANNER
+            ══════════════════════════════ */
+    .overdue-banner {
+        background: linear-gradient(135deg, rgba(255,107,138,.1), rgba(251,146,60,.07));
+        border: 1px solid rgba(255,107,138,.3);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        margin-bottom: 1.5rem;
+        animation: fadeDown .5s ease both;
+    }
+
+    .ob-icon {
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+
+    .ob-title {
+        font-size: .9rem;
+        font-weight: 800;
+        color: var(--rose);
+    }
+
+    .ob-sub {
+        font-size: .78rem;
+        color: var(--text-secondary);
+        margin-top: .15rem;
+        line-height: 1.5;
+    }
+
+    /* ══════════════════════════════
+               CARDS
+            ══════════════════════════════ */
+    .uni-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+        .uni-card.anim {
+            animation: fadeUp .65s ease both;
+        }
+
+    .uni-card-header {
+        padding: 1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .65rem;
+        border-bottom: 1px solid var(--card-border);
+        font-weight: 700;
+        font-size: .9rem;
+    }
+
+    .h-gold {
+        background: linear-gradient(135deg,rgba(245,200,66,.1),transparent);
+        color: var(--gold);
+    }
+
+    .h-teal {
+        background: linear-gradient(135deg,var(--teal-glow),transparent);
+        color: var(--teal);
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .uni-card-body {
+        padding: 1.5rem;
+    }
+
+    /* ══════════════════════════════
+               PENDING BOX
+            ══════════════════════════════ */
+    .pending-box {
+        background: linear-gradient(135deg, rgba(245,200,66,.07), rgba(0,212,170,.04));
+        border: 1px solid rgba(245,200,66,.2);
+        border-radius: 16px;
+        padding: 1.4rem;
+        margin-bottom: 1.25rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .pending-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        }
+
+        .pending-box.is-overdue {
+            background: linear-gradient(135deg,rgba(255,107,138,.07),rgba(251,146,60,.04));
+            border-color: rgba(255,107,138,.3);
+        }
+
+            .pending-box.is-overdue::before {
+                background: linear-gradient(90deg, var(--rose), var(--orange));
+            }
+
+    .pending-room {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .room-badge {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        background: linear-gradient(135deg,var(--gold),#e8a020);
+        display: grid;
+        place-items: center;
+        font-size: 1.3rem;
+        color: var(--midnight);
+        box-shadow: 0 0 18px var(--gold-glow);
+        flex-shrink: 0;
+    }
+
+        .room-badge.danger {
+            background: linear-gradient(135deg,var(--rose),#cc3355);
+            box-shadow: 0 0 18px var(--rose-glow);
+        }
+
+    .room-info-title {
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .room-info-sub {
+        font-size: .78rem;
+        color: var(--text-muted);
+        margin-top: .2rem;
+        line-height: 1.6;
+    }
+
+    /* ── Meta grid ── */
+    .pending-meta {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .meta-item {
+        background: rgba(255,255,255,.03);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: .75rem .9rem;
+        text-align: center;
+    }
+
+    .meta-label {
+        font-size: .65rem;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin-bottom: .3rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+    }
+
+    .meta-val {
+        font-size: .9rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+        .meta-val.price {
+            color: var(--gold);
+            font-size: 1rem;
+        }
+
+        .meta-val.overdue {
+            color: var(--rose);
+        }
+
+    /* ── Countdown ── */
+    .countdown-wrap {
+        background: rgba(255,107,138,.06);
+        border: 1px solid rgba(255,107,138,.2);
+        border-radius: 12px;
+        padding: .85rem 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        margin-bottom: 1.4rem;
+        flex-wrap: wrap;
+    }
+
+    .countdown-label {
+        font-size: .8rem;
+        color: var(--rose);
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .countdown-timer {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+    }
+
+    .cd-segment {
+        background: rgba(255,107,138,.12);
+        border: 1px solid rgba(255,107,138,.25);
+        border-radius: 8px;
+        padding: .3rem .65rem;
+        text-align: center;
+        min-width: 50px;
+    }
+
+    .cd-num {
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: var(--rose);
+        line-height: 1;
+    }
+
+    .cd-unit {
+        font-size: .58rem;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 2px;
+    }
+
+    .cd-sep {
+        color: var(--rose);
+        font-weight: 900;
+        font-size: 1.1rem;
+    }
+
+    /* ── Method cards ── */
+    .methods-label {
+        font-size: .82rem;
+        color: var(--text-secondary);
+        font-weight: 700;
+        margin-bottom: .85rem;
+    }
+
+    .methods-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: .85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .method-card {
+        background: rgba(255,255,255,.03);
+        border: 2px solid var(--card-border);
+        border-radius: 14px;
+        padding: 1.1rem .85rem;
+        cursor: pointer;
+        transition: all .22s;
+        text-align: center;
+        user-select: none;
+    }
+
+        .method-card:hover {
+            border-color: rgba(245,200,66,.4);
+            background: rgba(245,200,66,.04);
+        }
+
+        .method-card.selected {
+            border-color: var(--gold);
+            background: var(--gold-glow);
+            box-shadow: 0 0 18px var(--gold-glow);
+        }
+
+    .method-icon {
+        font-size: 1.7rem;
+        margin-bottom: .5rem;
+    }
+
+    .method-name {
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .method-desc {
+        font-size: .68rem;
+        color: var(--text-muted);
+        margin-top: .2rem;
+    }
+
+    /* ── Payment panels ── */
+    .payment-panel {
+        display: none;
+    }
+
+        .payment-panel.active {
+            display: block;
+            animation: fadeUp .35s ease both;
+        }
+
+    /* ── Form fields ── */
+    .form-label {
+        display: block;
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: .45rem;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: .7rem 1rem;
+        background: rgba(255,255,255,.04);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-family: 'Cairo', sans-serif;
+        font-size: .9rem;
+        transition: border-color .2s, box-shadow .2s;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--gold-glow);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-select option {
+            background: #141f38;
+            color: var(--text-primary);
+        }
+
+    .select-wrap {
+        position: relative;
+    }
+
+        .select-wrap::after {
+            content: '▾';
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+    .field-group {
+        margin-bottom: 1.1rem;
+    }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .input-icon-wrap {
+        position: relative;
+    }
+
+        .input-icon-wrap .form-control {
+            padding-left: 2.8rem;
+        }
+
+    .input-prefix {
+        position: absolute;
+        left: .9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    /* ── Bank transfer box ── */
+    .transfer-box {
+        background: rgba(56,189,248,.05);
+        border: 1px solid rgba(56,189,248,.2);
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+        .transfer-box h6 {
+            color: var(--sky);
+            font-size: .85rem;
+            margin-bottom: .65rem;
+            font-weight: 700;
+        }
+
+    .transfer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .45rem 0;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+        font-size: .83rem;
+    }
+
+        .transfer-row:last-child {
+            border-bottom: none;
+        }
+
+    .tr-key {
+        color: var(--text-muted);
+    }
+
+    .tr-val {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .copy-btn {
+        background: none;
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        padding: .15rem .5rem;
+        color: var(--text-muted);
+        font-size: .68rem;
+        cursor: pointer;
+        transition: all .15s;
+        font-family: 'Cairo', sans-serif;
+    }
+
+        .copy-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+    /* ── Pay button ── */
+    .btn-pay {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--gold), #e8a020);
+        border: none;
+        border-radius: 14px;
+        color: var(--midnight);
+        font-family: 'Cairo', sans-serif;
+        font-size: 1rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: all .2s;
+        box-shadow: 0 4px 24px var(--gold-glow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+    }
+
+        .btn-pay:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 36px var(--gold-glow);
+        }
+
+        .btn-pay:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    /* ── No-pending ── */
+    .no-pending {
+        background: rgba(255,255,255,.02);
+        border: 1px dashed var(--card-border);
+        border-radius: 14px;
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: .875rem;
+    }
+
+        .no-pending .np-icon {
+            font-size: 2rem;
+            opacity: .35;
+            margin-bottom: .65rem;
+        }
+
+    /* ══════════════════════════════
+               BADGES
+            ══════════════════════════════ */
+    .badge {
+        display: inline-block;
+        padding: .25rem .75rem;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .badge-paid {
+        background: var(--green-glow);
+        border: 1px solid rgba(34,197,94,.3);
+        color: var(--green);
+    }
+
+    .badge-overdue {
+        background: var(--rose-glow);
+        border: 1px solid rgba(255,107,138,.3);
+        color: var(--rose);
+    }
+
+    .badge-pending {
+        background: rgba(245,200,66,.12);
+        border: 1px solid rgba(245,200,66,.3);
+        color: var(--gold);
+    }
+
+    .badge-warning {
+        background: var(--orange-glow);
+        border: 1px solid rgba(251,146,60,.3);
+        color: var(--orange);
+    }
+
+    .badge-blink::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        margin-left: .35rem;
+        animation: blink 1.4s ease-in-out infinite;
+    }
+
+    /* Category pill */
+    .cat-pill {
+        display: inline-block;
+        padding: .2rem .65rem;
+        border-radius: 8px;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+    .cat-housing {
+        background: rgba(0,212,170,.1);
+        border: 1px solid rgba(0,212,170,.25);
+        color: var(--teal);
+    }
+
+    .cat-meals {
+        background: rgba(245,200,66,.1);
+        border: 1px solid rgba(245,200,66,.25);
+        color: var(--gold);
+    }
+
+    .cat-fine {
+        background: var(--rose-glow);
+        border: 1px solid rgba(255,107,138,.25);
+        color: var(--rose);
+    }
+
+    .cat-other {
+        background: rgba(155,114,255,.1);
+        border: 1px solid rgba(155,114,255,.25);
+        color: var(--purple);
+    }
+
+    /* ══════════════════════════════
+               HISTORY SECTION
+            ══════════════════════════════ */
+    .history-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .9rem 1.25rem;
+        border-bottom: 1px solid var(--card-border);
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        flex-wrap: wrap;
+    }
+
+    .history-toolbar-title {
+        font-family: 'Syne', sans-serif;
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .filter-btn {
+        background: rgba(255,255,255,.04);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        padding: .3rem .85rem;
+        color: var(--text-muted);
+        font-family: 'Cairo', sans-serif;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .18s;
+    }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--teal-glow);
+            border-color: rgba(0,212,170,.3);
+            color: var(--teal);
+        }
+
+    .search-box {
+        background: var(--navy);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        padding: .45rem .9rem;
+        color: var(--text-primary);
+        font-size: .82rem;
+        font-family: 'Cairo', sans-serif;
+        outline: none;
+        transition: border-color .2s;
+        width: 210px;
+    }
+
+        .search-box:focus {
+            border-color: var(--gold);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-muted);
+        }
+
+    /* ── Table ── */
+    .pay-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .pay-table th {
+            padding: .75rem 1rem;
+            text-align: right;
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+            background: var(--navy);
+        }
+
+        .pay-table td {
+            padding: .85rem 1rem;
+            font-size: .84rem;
+            border-bottom: 1px solid rgba(30,47,82,.6);
+            vertical-align: middle;
+        }
+
+        .pay-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pay-table tr:hover td {
+            background: rgba(255,255,255,.018);
+        }
+
+    .pay-amount {
+        font-weight: 800;
+        color: var(--gold);
+        font-size: .95rem;
+    }
+
+    .pay-ref {
+        font-family: monospace;
+        font-size: .75rem;
+        color: var(--sky);
+    }
+
+    .td-date {
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: .85rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-muted);
+    }
+
+        .empty-state .e-icon {
+            font-size: 2.5rem;
+            opacity: .3;
+            margin-bottom: .75rem;
+        }
+
+    /* ══════════════════════════════
+               QUICK PAY MODAL
+            ══════════════════════════════ */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: rgba(0,0,0,.75);
+        backdrop-filter: blur(5px);
+        place-items: center;
+        padding: 1rem;
+    }
+
+    .modal-box {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 1.75rem;
+        width: 100%;
+        max-width: 480px;
+        animation: fadeUp .3s ease both;
+    }
+
+    /* ══════════════════════════════
+               ANIMATIONS
+            ══════════════════════════════ */
+    @@keyframes fadeDown {
+        from {
+            opacity: 0;
+            transform: translateY(-14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes blink {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.3;
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .d1 {
+        animation: fadeUp .6s .05s ease both;
+    }
+
+    .d2 {
+        animation: fadeUp .6s .12s ease both;
+    }
+
+    .d3 {
+        animation: fadeUp .6s .19s ease both;
+    }
+
+    /* ══════════════════════════════
+               RESPONSIVE
+            ══════════════════════════════ */
+    @@media(max-width:700px) {
+        .pending-meta {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .methods-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .field-row {
+            grid-template-columns: 1fr;
+        }
+
+        .header-stats {
+            display: none;
+        }
+
+        .pay-table th:nth-child(4), .pay-table td:nth-child(4) {
+            display: none;
+        }
+    }
+
+    @@media(max-width:480px) {
+        .search-box {
+            width: 100%;
+        }
+    }
+</style>
+
+<!-- ── Animated BG ── -->
+<div class="dash-bg"><div class="grid-overlay"></div></div>
+
+<div class="pay-wrapper">
+
+    <a asp-action="Dashboard" class="btn-back">← العودة إلى لوحة التحكم</a>
+
+    <!-- ══ PAGE HEADER + STAT CHIPS ══ -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="page-icon">💳</div>
+            <div>
+                <p class="page-title">المدفوعات والفواتير</p>
+                <p class="page-sub">تتبع دفعاتك، سجل المدفوعات، وسداد الرسوم المستحقة</p>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-chip">
+                <span class="chip-val cv-teal">@Model?.TotalPaid.ToString("N0")</span>
+                <span class="chip-lbl">إجمالي المدفوع</span>
+            </div>
+            <div class="stat-chip">
+                <span class="chip-val cv-gold">@(Model?.PendingPayments?.Count ?? 0)</span>
+                <span class="chip-lbl">معلّق</span>
+            </div>
+            <div class="stat-chip">
+                <span class="chip-val cv-rose">@Model?.TotalOverdue.ToString("N0")</span>
+                <span class="chip-lbl">متأخر ر.س</span>
+            </div>
+            <div class="stat-chip">
+                <span class="chip-val cv-orange">@(Model?.AllPayments?.Count ?? 0)</span>
+                <span class="chip-lbl">الفواتير</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ ALERTS ══ -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="uni-alert uni-alert-success"><span>✅</span><span>@TempData["Success"]</span></div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="uni-alert uni-alert-danger"><span>⚠️</span><span>@TempData["Error"]</span></div>
+    }
+    @if (TempData["Warning"] != null)
+    {
+        <div class="uni-alert uni-alert-warning"><span>🔔</span><span>@TempData["Warning"]</span></div>
+    }
+
+    <!-- ══ OVERDUE BANNER ══ -->
+    @if (Model?.OverduePayments?.Any() == true)
+    {
+        <div class="overdue-banner">
+            <div class="ob-icon">🚨</div>
+            <div>
+                <div class="ob-title">لديك @Model.OverduePayments.Count دفعة متأخرة!</div>
+                <div class="ob-sub">
+                    يرجى السداد فوراً لتجنب إشعار الإخلاء.
+                    إجمالي المتأخر: <strong style="color:var(--rose)">@Model.TotalOverdue.ToString("N0") ر.س</strong>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ══ SECTION 1: PENDING / DUE ══ -->
+    <div class="uni-card d1">
+        <div class="uni-card-header h-gold">
+            <div class="header-left">⚡ مدفوعات مستحقة</div>
+            @{
+                int dueCount = (Model?.PendingPayments?.Count ?? 0) + (Model?.PendingApplication != null ? 1 : 0);
+            }
+            @if (dueCount > 0)
+            {
+                <span class="badge badge-pending badge-blink">@dueCount مستحق</span>
+            }
+        </div>
+        <div class="uni-card-body">
+
+            @* ── New application awaiting first payment ── *@
+            @if (Model?.PendingApplication != null)
+            {
+                var app = Model.PendingApplication;
+                var deadline = app.PaymentDeadline ?? DateTime.Now.AddHours(24);
+                var amount = app.PreferredRoom?.PricePerSemester;
+
+                <div class="pending-box">
+                    <div class="pending-room">
+                        <div class="room-badge">🏠</div>
+                        <div>
+                            <div class="room-info-title">
+                                حجز جديد — غرفة @(app.PreferredRoom?.RoomNumber ?? "—")
+                                · @(app.PreferredRoom?.Building?.BuildingName ?? "—")
+                            </div>
+                            <div class="room-info-sub">
+                                @(app.PreferredRoom?.RoomType ?? "—")
+                                · دور @(app.PreferredRoom?.Floor?.ToString() ?? "—")
+                                · السنة الدراسية: @app.AcademicYear
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pending-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">رقم الطلب</div>
+                            <div class="meta-val">#@app.ApplicationId</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">تاريخ الطلب</div>
+                            <div class="meta-val">@app.CreatedAt?.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">الفصل الدراسي</div>
+                            <div class="meta-val">الأول</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">المبلغ المطلوب</div>
+                            <div class="meta-val price">@(amount?.ToString("N0") ?? "—") ر.س</div>
+                        </div>
+                    </div>
+
+                    <!-- Countdown -->
+                    <div class="countdown-wrap">
+                        <span class="countdown-label">⏱ ينتهي الحجز خلال:</span>
+                        <div class="countdown-timer" id="countdown"
+                             data-deadline="@deadline.ToString("yyyy-MM-ddTHH:mm:ss")">
+                            <div class="cd-segment"><div class="cd-num" id="cd-h">00</div><span class="cd-unit">ساعة</span></div>
+                            <span class="cd-sep">:</span>
+                            <div class="cd-segment"><div class="cd-num" id="cd-m">00</div><span class="cd-unit">دقيقة</span></div>
+                            <span class="cd-sep">:</span>
+                            <div class="cd-segment"><div class="cd-num" id="cd-s">00</div><span class="cd-unit">ثانية</span></div>
+                        </div>
+                    </div>
+
+                    <div class="methods-label">🏦 اختر طريقة الدفع</div>
+                    <div class="methods-grid">
+                        <div class="method-card" onclick="selectMethod('card',this)">
+                            <div class="method-icon">💳</div>
+                            <div class="method-name">بطاقة ائتمانية</div>
+                            <div class="method-desc">فيزا / ماستركارد</div>
+                        </div>
+                        <div class="method-card" onclick="selectMethod('transfer',this)">
+                            <div class="method-icon">🏦</div>
+                            <div class="method-name">تحويل بنكي</div>
+                            <div class="method-desc">تحويل مباشر</div>
+                        </div>
+                        <div class="method-card" onclick="selectMethod('wallet',this)">
+                            <div class="method-icon">📱</div>
+                            <div class="method-name">محفظة إلكترونية</div>
+                            <div class="method-desc">STC Pay / Apple Pay</div>
+                        </div>
+                    </div>
+
+                    @* Credit Card Panel *@
+                    <div class="payment-panel" id="panel-card">
+                        <form asp-controller="Student" asp-action="ConfirmPayment" method="post" id="payFormCard">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ApplicationId" value="@app.ApplicationId" />
+                            <input type="hidden" name="PaymentMethod" value="بطاقة ائتمانية" />
+                            <input type="hidden" name="PaymentCategory" value="رسوم سكن" />
+                            <input type="hidden" name="AcademicYear" value="@app.AcademicYear" />
+                            <input type="hidden" name="Semester" value="الأول" />
+                            <input type="hidden" name="Amount" value="@amount" />
+                            <div class="field-group">
+                                <label class="form-label">اسم حامل البطاقة</label>
+                                <input name="CardHolder" class="form-control" placeholder="الاسم كما هو على البطاقة" required />
+                            </div>
+                            <div class="field-group">
+                                <label class="form-label">رقم البطاقة</label>
+                                <div class="input-icon-wrap">
+                                    <span class="input-prefix">💳</span>
+                                    <input name="CardNumber" class="form-control" id="cardNumInput"
+                                           placeholder="•••• •••• •••• ••••" maxlength="19" required />
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field-group">
+                                    <label class="form-label">تاريخ الانتهاء</label>
+                                    <input name="Expiry" class="form-control" id="expiryInput" placeholder="MM/YY" maxlength="5" required />
+                                </div>
+                                <div class="field-group">
+                                    <label class="form-label">CVV</label>
+                                    <input name="Cvv" class="form-control" placeholder="•••" maxlength="4" type="password" required />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-pay" id="payBtnCard">
+                                🔒 دفع @(amount?.ToString("N0") ?? "—") ر.س
+                            </button>
+                        </form>
+                    </div>
+
+                    @* Bank Transfer Panel *@
+                    <div class="payment-panel" id="panel-transfer">
+                        <div class="transfer-box">
+                            <h6>📋 بيانات التحويل البنكي</h6>
+                            <div class="transfer-row">
+                                <span class="tr-key">اسم البنك</span>
+                                <span class="tr-val">بنك الراجحي</span>
+                            </div>
+                            <div class="transfer-row">
+                                <span class="tr-key">اسم المستفيد</span>
+                                <span class="tr-val">جامعة UniStay للسكن الطلابي</span>
+                            </div>
+                            <div class="transfer-row">
+                                <span class="tr-key">رقم IBAN</span>
+                                <div style="display:flex;align-items:center;gap:.5rem;">
+                                    <span class="tr-val">SA44 2000 0001 2345 6789 1234</span>
+                                    <button type="button" class="copy-btn" onclick="copyText('SA4420000001234567891234',this)">نسخ</button>
+                                </div>
+                            </div>
+                            <div class="transfer-row">
+                                <span class="tr-key">المبلغ</span>
+                                <span class="tr-val" style="color:var(--gold);">@(amount?.ToString("N0") ?? "—") ر.س</span>
+                            </div>
+                            <div class="transfer-row">
+                                <span class="tr-key">رقم المرجع (إلزامي)</span>
+                                <div style="display:flex;align-items:center;gap:.5rem;">
+                                    <span class="tr-val" style="color:var(--sky);">APP-@app.ApplicationId</span>
+                                    <button type="button" class="copy-btn" onclick="copyText('APP-@app.ApplicationId',this)">نسخ</button>
+                                </div>
+                            </div>
+                        </div>
+                        <form asp-controller="Student" asp-action="ConfirmPayment" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ApplicationId" value="@app.ApplicationId" />
+                            <input type="hidden" name="PaymentMethod" value="تحويل بنكي" />
+                            <input type="hidden" name="PaymentCategory" value="رسوم سكن" />
+                            <input type="hidden" name="AcademicYear" value="@app.AcademicYear" />
+                            <input type="hidden" name="Semester" value="الأول" />
+                            <input type="hidden" name="Amount" value="@amount" />
+                            <div class="field-group">
+                                <label class="form-label">رقم إيصال التحويل</label>
+                                <input name="ReceiptNumber" class="form-control" placeholder="أدخل رقم الإيصال / المرجع" required />
+                            </div>
+                            <button type="submit" class="btn-pay">📤 إرسال تأكيد التحويل</button>
+                        </form>
+                    </div>
+
+                    @* E-Wallet Panel *@
+                    <div class="payment-panel" id="panel-wallet">
+                        <div class="methods-grid" style="grid-template-columns:1fr 1fr;margin-bottom:1.25rem;">
+                            <div class="method-card" onclick="selectWallet('STC Pay',this)">
+                                <div class="method-icon">📲</div><div class="method-name">STC Pay</div>
+                            </div>
+                            <div class="method-card" onclick="selectWallet('Apple Pay',this)">
+                                <div class="method-icon">🍎</div><div class="method-name">Apple Pay</div>
+                            </div>
+                        </div>
+                        <form asp-controller="Student" asp-action="ConfirmPayment" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ApplicationId" value="@app.ApplicationId" />
+                            <input type="hidden" name="PaymentMethod" id="walletMethodInput" value="STC Pay" />
+                            <input type="hidden" name="PaymentCategory" value="رسوم سكن" />
+                            <input type="hidden" name="AcademicYear" value="@app.AcademicYear" />
+                            <input type="hidden" name="Semester" value="الأول" />
+                            <input type="hidden" name="Amount" value="@amount" />
+                            <div class="field-group">
+                                <label class="form-label">رقم الجوال المرتبط بالمحفظة</label>
+                                <input name="WalletPhone" class="form-control" placeholder="05xxxxxxxx" maxlength="10" required />
+                            </div>
+                            <button type="submit" class="btn-pay">📱 دفع @(amount?.ToString("N0") ?? "—") ر.س</button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            @* ── Existing pending / overdue records ── *@
+            @if (Model?.PendingPayments?.Any() == true)
+            {
+                @foreach (var p in Model.PendingPayments)
+                {
+                    bool isOver = p.IsOverdue == true || (p.DueDate.HasValue && p.DueDate < DateTime.Now);
+                    bool hasEvict = p.EvictionNoticeIssuedAt.HasValue;
+                    bool hasWarn = p.FirstWarningSentAt.HasValue;
+
+                    <div class="pending-box @(isOver ? "is-overdue" : "")">
+                        <div class="pending-room">
+                            <div class="room-badge @(isOver ? "danger" : "")">@(isOver ? "🚨" : "💰")</div>
+                            <div style="flex:1">
+                                <div class="room-info-title">
+                                    @p.PaymentCategory
+                                    @if (hasEvict)
+                                    {
+                                        <span class="badge badge-warning" style="margin-right:.5rem">⚠️ إشعار إخلاء</span>
+                                    }
+                                    else if (isOver)
+                                    {
+                                        <span class="badge badge-overdue" style="margin-right:.5rem">متأخر</span>
+                                    }
+                                    else if (hasWarn)
+                                    {
+                                        <span class="badge badge-warning" style="margin-right:.5rem">تحذير أول</span>
+                                    }
+                                </div>
+                                <div class="room-info-sub">
+                                    الفصل: @(p.Semester ?? "—")
+                                    · السنة: @(p.AcademicYear ?? "—")
+                                    · النوع: @(p.PaymentType ?? "—")
+                                    · تاريخ الاستحقاق:
+                                    <strong style="color:@(isOver ? "var(--rose)" : "var(--gold)")">
+                                        @(p.DueDate?.ToString("dd/MM/yyyy") ?? "—")
+                                    </strong>
+                                </div>
+                            </div>
+                            <div style="text-align:left;flex-shrink:0;">
+                                <div class="pay-amount">@p.Amount?.ToString("N0") ر.س</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-pay"
+                                onclick="openPayModal(@p.PaymentId, @(p.Amount ?? 0), '@p.PaymentCategory', '@p.AcademicYear', '@p.Semester', @(p.AllocationId?.ToString() ?? "0"))">
+                            💳 سداد الآن
+                        </button>
+                    </div>
+                }
+            }
+
+            @if (dueCount == 0)
+            {
+                <div class="no-pending">
+                    <div class="np-icon">✅</div>
+                    <p>لا توجد مدفوعات مستحقة. جميع حساباتك محدّثة.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ══ SECTION 2: HISTORY TABLE ══ -->
+    <div class="uni-card d2">
+        <div class="uni-card-header h-teal">
+            <div class="header-left">📜 سجل المدفوعات</div>
+            <span style="font-size:.78rem;color:var(--text-muted);font-weight:500;">
+                @(Model?.AllPayments?.Count ?? 0) فاتورة
+            </span>
+        </div>
+
+        @if (Model?.AllPayments != null && Model.AllPayments.Any())
+        {
+            <div class="history-toolbar">
+                <div class="toolbar-left">
+                    <span class="history-toolbar-title">كل المعاملات</span>
+                    <button type="button" class="filter-btn active" onclick="filterTable('all',this)">الكل</button>
+                    <button type="button" class="filter-btn" onclick="filterTable('سكن',this)">🏠 السكن</button>
+                    <button type="button" class="filter-btn" onclick="filterTable('وجبة',this)">🍽 الوجبات</button>
+                    <button type="button" class="filter-btn" onclick="filterTable('غرامة',this)">⚠️ الغرامات</button>
+                </div>
+                <input type="text" class="search-box" id="historySearch"
+                       placeholder="🔍  ابحث برقم الإيصال أو الطريقة…"
+                       oninput="searchHistory(this.value)" />
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="pay-table" id="payTable">
+                    <thead>
+                        <tr>
+                            <th>رقم الإيصال</th>
+                            <th>التاريخ</th>
+                            <th>الفئة</th>
+                            <th>الفصل / السنة</th>
+                            <th>طريقة الدفع</th>
+                            <th>الحالة</th>
+                            <th>تاريخ الاستحقاق</th>
+                            <th>المبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        @foreach (var p in Model.AllPayments.OrderByDescending(x => x.PaymentDate))
+                        {
+                            bool isPaid = p.PaymentDate.HasValue && p.IsOverdue != true;
+                            bool isOver = p.IsOverdue == true || (!p.PaymentDate.HasValue && p.DueDate.HasValue && p.DueDate < DateTime.Now);
+                            bool hasEvict = p.EvictionNoticeIssuedAt.HasValue;
+                            bool hasWarn = p.FirstWarningSentAt.HasValue;
+
+                            string sBadge, sLabel;
+                            if (hasEvict) { sBadge = "badge-warning"; sLabel = "⚠️ إشعار إخلاء"; }
+                            else if (isOver) { sBadge = "badge-overdue"; sLabel = "متأخر"; }
+                            else if (hasWarn) { sBadge = "badge-warning"; sLabel = "تحذير أول"; }
+                            else if (isPaid) { sBadge = "badge-paid"; sLabel = "مدفوع ✓"; }
+                            else { sBadge = "badge-pending"; sLabel = "معلق"; }
+
+                            string catCls = p.PaymentCategory switch
+                            {
+                                var c when c.Contains("سكن") => "cat-housing",
+                                var c when c.Contains("وجبة") || c.Contains("وجبات") => "cat-meals",
+                                var c when c.Contains("غرامة") => "cat-fine",
+                                _ => "cat-other"
+                            };
+                            string mIcon = (p.PaymentMethod ?? "") switch
+                            {
+                                var m when m.Contains("بطاقة") => "💳",
+                                var m when m.Contains("تحويل") => "🏦",
+                                var m when m.Contains("STC") || m.Contains("Apple") => "📱",
+                                var m when m.Contains("نقد") => "💵",
+                                _ => "💰"
+                            };
+
+                            <tr data-category="@p.PaymentCategory">
+                                <td class="pay-ref">@(p.ReceiptNumber ?? "—")</td>
+                                <td class="td-date">
+                                    @(p.PaymentDate?.ToString("dd/MM/yyyy") ?? "—")
+                                    <div style="font-size:.7rem;color:var(--text-muted);font-weight:400;margin-top:.1rem;">
+                                        @(p.PaymentDate?.ToString("HH:mm") ?? "")
+                                    </div>
+                                </td>
+                                <td><span class="cat-pill @catCls">@p.PaymentCategory</span></td>
+                                <td style="font-size:.8rem;color:var(--text-secondary);">@(p.Semester ?? "—") / @(p.AcademicYear ?? "—")</td>
+                                <td style="font-size:.82rem;">
+                                    @if (!string.IsNullOrEmpty(p.PaymentMethod))
+                                    {
+                                        @(mIcon + " " + p.PaymentMethod)
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--text-muted)">—</span>
+                                    }
+                                </td>
+                                <td><span class="badge @sBadge">@sLabel</span></td>
+                                <td style="font-size:.8rem;color:@(isOver ? "var(--rose)" : "var(--text-muted)");">
+                                    @(p.DueDate?.ToString("dd/MM/yyyy") ?? "—")
+                                </td>
+                                <td class="pay-amount">@p.Amount?.ToString("N0") <span style="font-size:.7rem;color:var(--text-muted);font-weight:400;">ر.س</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="e-icon">🧾</div>
+                <p>لا يوجد سجل مدفوعات بعد</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+<!-- ══ QUICK PAY MODAL ══ -->
+<div id="payModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+            <h5 style="font-family:'Tajawal',sans-serif;font-size:1.1rem;font-weight:800;">سداد الدفعة</h5>
+            <button onclick="closeModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+        </div>
+        <form asp-controller="Student" asp-action="RecordPayment" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="PaymentId" id="modal-paymentId" />
+            <input type="hidden" name="AllocationId" id="modal-allocId" />
+            <input type="hidden" name="AcademicYear" id="modal-year" />
+            <input type="hidden" name="Semester" id="modal-semester" />
+            <input type="hidden" name="Amount" id="modal-amount" />
+            <input type="hidden" name="PaymentCategory" id="modal-category" />
+
+            <div class="field-group">
+                <label class="form-label">الفئة</label>
+                <input id="modal-cat-display" class="form-control" readonly style="opacity:.6;" />
+            </div>
+            <div class="field-group">
+                <label class="form-label">المبلغ</label>
+                <input id="modal-amount-display" class="form-control" readonly
+                       style="color:var(--gold);font-weight:800;opacity:.85;" />
+            </div>
+            <div class="field-group">
+                <label class="form-label">طريقة الدفع</label>
+                <div class="select-wrap">
+                    <select name="PaymentMethod" class="form-select" required>
+                        <option value="">— اختر —</option>
+                        <option value="بطاقة ائتمانية">💳 بطاقة ائتمانية</option>
+                        <option value="تحويل بنكي">🏦 تحويل بنكي</option>
+                        <option value="STC Pay">📲 STC Pay</option>
+                        <option value="Apple Pay">🍎 Apple Pay</option>
+                        <option value="نقداً">💵 نقداً</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="form-label">رقم الإيصال (اختياري)</label>
+                <input name="ReceiptNumber" class="form-control" placeholder="أدخل رقم الإيصال" />
+            </div>
+            <button type="submit" class="btn-pay" style="margin-top:.5rem;">✅ تأكيد السداد</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    /* ── Payment method panels ── */
+    function selectMethod(method, el) {
+        document.querySelectorAll('.pending-box > .methods-grid > .method-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.querySelectorAll('.payment-panel').forEach(p => p.classList.remove('active'));
+        const panel = document.getElementById('panel-' + method);
+        if (panel) { panel.classList.add('active'); panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    }
+
+    function selectWallet(type, el) {
+        document.querySelectorAll('#panel-wallet .method-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        const inp = document.getElementById('walletMethodInput');
+        if (inp) inp.value = type;
+    }
+
+    /* ── Copy to clipboard ── */
+    function copyText(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✓';
+            setTimeout(() => btn.textContent = 'نسخ', 1800);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '✓'; setTimeout(() => btn.textContent = 'نسخ', 1800);
+        });
+    }
+
+    /* ── Card number formatting ── */
+    const cardInput = document.getElementById('cardNumInput');
+    if (cardInput) cardInput.addEventListener('input', function () {
+        let v = this.value.replace(/\D/g, '').substring(0, 16);
+        this.value = v.replace(/(.{4})/g, '$1 ').trim();
+    });
+
+    /* ── Expiry formatting ── */
+    const expiryInput = document.getElementById('expiryInput');
+    if (expiryInput) expiryInput.addEventListener('input', function () {
+        let v = this.value.replace(/\D/g, '').substring(0, 4);
+        if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2);
+        this.value = v;
+    });
+
+    /* ── Prevent double-submit ── */
+    const payFormCard = document.getElementById('payFormCard');
+    if (payFormCard) payFormCard.addEventListener('submit', function () {
+        const btn = document.getElementById('payBtnCard');
+        if (btn) { btn.disabled = true; btn.innerHTML = '⏳ جاري المعالجة...'; }
+    });
+
+    /* ── Countdown timer ── */
+    (function () {
+        const el = document.getElementById('countdown');
+        if (!el) return;
+        const deadline = new Date(el.dataset.deadline);
+        const pad = n => String(n).padStart(2, '0');
+        function tick() {
+            const diff = deadline - new Date();
+            const ids = ['cd-h', 'cd-m', 'cd-s'];
+            if (diff <= 0) { ids.forEach(id => { const e = document.getElementById(id); if (e) e.textContent = '00'; }); return; }
+            const h = document.getElementById('cd-h'), m = document.getElementById('cd-m'), s = document.getElementById('cd-s');
+            if (h) h.textContent = pad(Math.floor(diff / 3600000));
+            if (m) m.textContent = pad(Math.floor((diff % 3600000) / 60000));
+            if (s) s.textContent = pad(Math.floor((diff % 60000) / 1000));
+        }
+        tick(); setInterval(tick, 1000);
+    })();
+
+    /* ── Quick pay modal ── */
+    function openPayModal(paymentId, amount, category, academicYear, semester, allocationId) {
+        document.getElementById('modal-paymentId').value     = paymentId;
+        document.getElementById('modal-allocId').value       = allocationId;
+        document.getElementById('modal-year').value          = academicYear;
+        document.getElementById('modal-semester').value      = semester;
+        document.getElementById('modal-amount').value        = amount;
+        document.getElementById('modal-category').value      = category;
+        document.getElementById('modal-cat-display').value   = category;
+        document.getElementById('modal-amount-display').value= Number(amount).toLocaleString('ar') + ' ر.س';
+        document.getElementById('payModal').style.display    = 'grid';
+    }
+    function closeModal() {
+        document.getElementById('payModal').style.display = 'none';
+    }
+
+    /* ── Table filter buttons ── */
+    function filterTable(cat, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // also clear search box
+        const sb = document.getElementById('historySearch');
+        if (sb) sb.value = '';
+        applyFilters(cat, '');
+    }
+
+    /* ── History search box ── */
+    function searchHistory(query) {
+        const activeBtn = document.querySelector('.filter-btn.active');
+        const cat = activeBtn ? activeBtn.dataset.cat || 'all' : 'all';
+        applyFilters(cat, query);
+    }
+
+    function applyFilters(cat, query) {
+        const q = query.toLowerCase().trim();
+        document.querySelectorAll('#historyBody tr').forEach(row => {
+            const matchCat  = cat === 'all' || (row.dataset.category || '').includes(cat);
+            const matchText = !q || row.textContent.toLowerCase().includes(q);
+            row.style.display = (matchCat && matchText) ? '' : 'none';
+        });
+    }
+
+    /* Tag filter buttons with data-cat */
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const map = { 'الكل': 'all', '🏠 السكن': 'سكن', '🍽 الوجبات': 'وجبة', '⚠️ الغرامات': 'غرامة' };
+        btn.dataset.cat = map[btn.textContent.trim()] || 'all';
+    });
+
+    /* ── Animate stat chips on load ── */
+    document.querySelectorAll('.stat-chip .chip-val').forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px)';
+        el.style.transition = 'all 0.4s ease';
+        setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 150 + i * 60);
+    });
+</script>
